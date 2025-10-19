@@ -1,0 +1,68 @@
+-- ========================================
+-- SERVER SCRIPT
+-- Letakkan script ini di ServerScriptService
+-- ========================================
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- ========================================
+-- KONFIGURASI PLAYER ROLES
+-- ========================================
+
+-- Daftar pemain berdasarkan Username
+-- Format: ["Username"] = {"Title", Color3.fromRGB(R, G, B)}
+-- PENTING: Username HARUS SESUAI huruf besar/kecil!
+
+local PlayerRoles = {
+    -- OWNER (Merah)
+    ["YourUsername"] = {"Owner", Color3.fromRGB(255, 0, 0)},
+    
+    -- DEVELOPER (Biru)
+    ["DevUsername"] = {"Dev", Color3.fromRGB(0, 170, 255)},
+    
+    -- ADMIN (Orange)
+    ["AdminUsername"] = {"Admin", Color3.fromRGB(255, 170, 0)},
+    
+    -- VIP (Gold)
+    ["VIPUsername"] = {"VIP", Color3.fromRGB(255, 215, 0)},
+    
+    -- STREAMER (Purple)
+    ["StreamerUsername"] = {"Streamer", Color3.fromRGB(138, 43, 226)},
+    
+    -- Tambahkan player lainnya di bawah ini:
+    -- ["Username"] = {"Title", Color3.fromRGB(R, G, B)},
+}
+
+-- Buat RemoteEvent untuk komunikasi ke client
+local RoleEvent = Instance.new("RemoteEvent")
+RoleEvent.Name = "GetPlayerRole"
+RoleEvent.Parent = ReplicatedStorage
+
+-- Fungsi untuk mendapatkan role pemain
+local function getPlayerRole(playerName)
+    if PlayerRoles[playerName] then
+        return PlayerRoles[playerName]
+    end
+    return nil
+end
+
+-- Kirim role ke client ketika diminta
+RoleEvent.OnServerEvent:Connect(function(player, targetPlayerName)
+    local role = getPlayerRole(targetPlayerName)
+    RoleEvent:FireClient(player, targetPlayerName, role)
+end)
+
+-- Kirim role semua player ke client baru
+Players.PlayerAdded:Connect(function(player)
+    task.wait(1) -- Tunggu sebentar agar client siap
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        local role = getPlayerRole(otherPlayer.Name)
+        if role then
+            RoleEvent:FireClient(player, otherPlayer.Name, role)
+        end
+    end
+end)
+
+print("Chat Title System (Server) berhasil dimuat!")
+print("Jangan lupa tambahkan LocalScript di StarterPlayer > StarterPlayerScripts!")
