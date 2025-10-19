@@ -50,8 +50,9 @@ TextChatService.OnIncomingMessage = function(message)
                 local properties = Instance.new("TextChatMessageProperties")
                 
                 -- Format: [Title] DisplayName: message
+                -- Display name dan title memiliki warna yang sama
                 properties.PrefixText = string.format(
-                    '<font color="rgb(%d,%d,%d)">[%s]</font> %s: ',
+                    '<font color="rgb(%d,%d,%d)">[%s] %s:</font> ',
                     math.floor(color.R * 255),
                     math.floor(color.G * 255),
                     math.floor(color.B * 255),
