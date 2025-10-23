@@ -1,6 +1,7 @@
 -- ========================================
--- LOCAL SCRIPT (CLIENT)
--- Letakkan script ini di StarterPlayer > StarterPlayerScripts
+-- CHAT TITLE SYSTEM - LOCAL SCRIPT (CLIENT)
+-- Author: ItoRenz00
+-- Place this script in StarterPlayer > StarterPlayerScripts
 -- ========================================
 
 local TextChatService = game:GetService("TextChatService")
@@ -9,33 +10,33 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
 
--- Tunggu RemoteEvent siap
+-- Wait for RemoteEvent to be ready
 local RoleEvent = ReplicatedStorage:WaitForChild("GetPlayerRole")
 
--- Tabel untuk menyimpan role semua player
+-- Table to store all player roles
 local PlayerRoles = {}
 
--- Terima data role dari server
+-- Receive role data from server
 RoleEvent.OnClientEvent:Connect(function(playerName, role)
     if role then
         PlayerRoles[playerName] = role
-        print("Role diterima untuk " .. playerName .. ": [" .. role[1] .. "]")
+        print("Role received for " .. playerName .. ": [" .. role[1] .. "]")
     end
 end)
 
--- Minta role semua player dari server
+-- Request all player roles from server
 task.wait(1)
 for _, otherPlayer in pairs(Players:GetPlayers()) do
     RoleEvent:FireServer(otherPlayer.Name)
 end
 
--- Monitor player baru yang join
+-- Monitor newly joined players
 Players.PlayerAdded:Connect(function(newPlayer)
     task.wait(0.5)
     RoleEvent:FireServer(newPlayer.Name)
 end)
 
--- Setup chat message dengan title
+-- Setup chat message with title
 TextChatService.OnIncomingMessage = function(message)
     local textSource = message.TextSource
     if textSource then
@@ -46,11 +47,11 @@ TextChatService.OnIncomingMessage = function(message)
                 local title = role[1]
                 local color = role[2]
                 
-                -- Buat properties untuk chat
+                -- Create properties for chat
                 local properties = Instance.new("TextChatMessageProperties")
                 
                 -- Format: [Title] DisplayName: message
-                -- Display name dan title memiliki warna yang sama
+                -- Display name and title have the same color
                 properties.PrefixText = string.format(
                     '<font color="rgb(%d,%d,%d)">[%s] %s:</font> ',
                     math.floor(color.R * 255),
@@ -66,4 +67,4 @@ TextChatService.OnIncomingMessage = function(message)
     end
 end
 
-print("Chat Title System (Client) berhasil dimuat!")
+print("Chat Title System (Client) successfully loaded!")
