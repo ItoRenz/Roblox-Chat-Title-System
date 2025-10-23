@@ -1,70 +1,127 @@
--- ========================================
--- CHAT TITLE SYSTEM - LOCAL SCRIPT (CLIENT)
--- Author: ItoRenz00
--- Place this script in StarterPlayer > StarterPlayerScripts
--- ========================================
+--[[
+	========================================
+	CHAT TITLE SYSTEM - CLIENT
+	========================================
+	Author: ItoRenz00
+	Version: 1.0.0
+	
+	Description:
+		Displays custom colored titles for players in chat
+		based on their assigned roles from the server.
+	
+	Installation:
+		Place this LocalScript in:
+		StarterPlayer > StarterPlayerScripts
+	
+	Requirements:
+		- RemoteEvent "GetPlayerRole" in ReplicatedStorage
+		- Server-side role management system
+	========================================
+--]]
 
+-- ========================================
+-- SERVICES
+-- ========================================
 local TextChatService = game:GetService("TextChatService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+-- ========================================
+-- VARIABLES
+-- ========================================
 local player = Players.LocalPlayer
-
--- Wait for RemoteEvent to be ready
 local RoleEvent = ReplicatedStorage:WaitForChild("GetPlayerRole")
-
--- Table to store all player roles
 local PlayerRoles = {}
 
--- Receive role data from server
+-- ========================================
+-- CONSTANTS
+-- ========================================
+local ROLE_REQUEST_DELAY = 1
+local NEW_PLAYER_DELAY = 0.5
+
+-- ========================================
+-- FUNCTIONS
+-- ========================================
+
+--- Request role for a specific player from server
+-- @param targetPlayer Player - The player to request role for
+local function requestPlayerRole(targetPlayer)
+	if targetPlayer and targetPlayer.Name then
+		RoleEvent:FireServer(targetPlayer.Name)
+	end
+end
+
+--- Request roles for all current players
+local function requestAllPlayerRoles()
+	for _, otherPlayer in ipairs(Players:GetPlayers()) do
+		requestPlayerRole(otherPlayer)
+	end
+end
+
+--- Format chat message with colored title and display name
+-- @param message TextChatMessage - The incoming chat message
+-- @return TextChatMessageProperties or nil
+local function formatChatMessage(message)
+	local textSource = message.TextSource
+	if not textSource then return nil end
+	
+	local sourcePlayer = Players:GetPlayerByUserId(textSource.UserId)
+	if not sourcePlayer then return nil end
+	
+	local role = PlayerRoles[sourcePlayer.Name]
+	if not role then return nil end
+	
+	local title = role[1]
+	local color = role[2]
+	
+	-- Create chat message properties
+	local properties = Instance.new("TextChatMessageProperties")
+	
+	-- Format: [Title] DisplayName: message
+	-- Both title and display name use the same color
+	properties.PrefixText = string.format(
+		'<font color="rgb(%d,%d,%d)">[%s] %s:</font> ',
+		math.floor(color.R * 255),
+		math.floor(color.G * 255),
+		math.floor(color.B * 255),
+		title,
+		sourcePlayer.DisplayName
+	)
+	
+	return properties
+end
+
+-- ========================================
+-- EVENT CONNECTIONS
+-- ========================================
+
+--- Handle role data received from server
 RoleEvent.OnClientEvent:Connect(function(playerName, role)
-    if role then
-        PlayerRoles[playerName] = role
-        print("Role received for " .. playerName .. ": [" .. role[1] .. "]")
-    end
+	if role and playerName then
+		PlayerRoles[playerName] = role
+		print(string.format("[Chat Title] Role received for %s: [%s]", playerName, role[1]))
+	end
 end)
 
--- Request all player roles from server
-task.wait(1)
-for _, otherPlayer in pairs(Players:GetPlayers()) do
-    RoleEvent:FireServer(otherPlayer.Name)
-end
-
--- Monitor newly joined players
+--- Handle new players joining the game
 Players.PlayerAdded:Connect(function(newPlayer)
-    task.wait(0.5)
-    RoleEvent:FireServer(newPlayer.Name)
+	task.wait(NEW_PLAYER_DELAY)
+	requestPlayerRole(newPlayer)
 end)
 
--- Setup chat message with title
-TextChatService.OnIncomingMessage = function(message)
-    local textSource = message.TextSource
-    if textSource then
-        local sourcePlayer = Players:GetPlayerByUserId(textSource.UserId)
-        if sourcePlayer then
-            local role = PlayerRoles[sourcePlayer.Name]
-            if role then
-                local title = role[1]
-                local color = role[2]
-                
-                -- Create properties for chat
-                local properties = Instance.new("TextChatMessageProperties")
-                
-                -- Format: [Title] DisplayName: message
-                -- Display name and title have the same color
-                properties.PrefixText = string.format(
-                    '<font color="rgb(%d,%d,%d)">[%s] %s:</font> ',
-                    math.floor(color.R * 255),
-                    math.floor(color.G * 255),
-                    math.floor(color.B * 255),
-                    title,
-                    sourcePlayer.DisplayName
-                )
-                
-                return properties
-            end
-        end
-    end
-end
+-- ========================================
+-- INITIALIZATION
+-- ========================================
 
-print("Chat Title System (Client) successfully loaded!")
+-- Setup chat message formatter
+TextChatService.OnIncomingMessage = formatChatMessage
+
+-- Request roles for all existing players
+task.wait(ROLE_REQUEST_DELAY)
+requestAllPlayerRoles()
+
+-- ========================================
+-- COMPLETION
+-- ========================================
+print("[Chat Title System] Client successfully loaded!")
+print("[Chat Title System] Author: ItoRenz00")
