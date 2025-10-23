@@ -1,68 +1,162 @@
--- ========================================
--- SERVER SCRIPT
--- Letakkan script ini di ServerScriptService
--- ========================================
+--[[
+	========================================
+	CHAT TITLE SYSTEM - SERVER
+	========================================
+	Author: ItoRenz00
+	Version: 1.0.0
+	
+	Description:
+		Manages player roles and sends role data to clients
+		for displaying custom colored titles in chat.
+	
+	Installation:
+		Place this Script in ServerScriptService
+	
+	Configuration:
+		Edit the PlayerRoles table below to add/modify roles
+		Format: ["Username"] = {"Title", Color3.fromRGB(R, G, B)}
+		Note: Usernames are case-sensitive!
+	========================================
+--]]
 
+-- ========================================
+-- SERVICES
+-- ========================================
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- ========================================
--- KONFIGURASI PLAYER ROLES
+-- CONFIGURATION: PLAYER ROLES
 -- ========================================
-
--- Daftar pemain berdasarkan Username
--- Format: ["Username"] = {"Title", Color3.fromRGB(R, G, B)}
--- PENTING: Username HARUS SESUAI huruf besar/kecil!
+--[[
+	Role Structure:
+	["Username"] = {"Title", Color3.fromRGB(R, G, B)}
+	
+	- Username: Player's Roblox username (case-sensitive!)
+	- Title: Text displayed in brackets before name
+	- Color: RGB color for title and name (0-255 for each value)
+	
+	Example Colors:
+	- Red:    Color3.fromRGB(255, 0, 0)
+	- Blue:   Color3.fromRGB(0, 170, 255)
+	- Green:  Color3.fromRGB(0, 255, 0)
+	- Gold:   Color3.fromRGB(255, 215, 0)
+	- Purple: Color3.fromRGB(138, 43, 226)
+--]]
 
 local PlayerRoles = {
-    -- OWNER (Merah)
-    ["YourUsername"] = {"Owner", Color3.fromRGB(255, 0, 0)},
-    
-    -- DEVELOPER (Biru)
-    ["DevUsername"] = {"Dev", Color3.fromRGB(0, 170, 255)},
-    
-    -- ADMIN (Orange)
-    ["AdminUsername"] = {"Admin", Color3.fromRGB(255, 170, 0)},
-    
-    -- VIP (Gold)
-    ["VIPUsername"] = {"VIP", Color3.fromRGB(255, 215, 0)},
-    
-    -- STREAMER (Purple)
-    ["StreamerUsername"] = {"Streamer", Color3.fromRGB(138, 43, 226)},
-    
-    -- Tambahkan player lainnya di bawah ini:
-    -- ["Username"] = {"Title", Color3.fromRGB(R, G, B)},
+	-- OWNER (Red)
+	["YourUsername"] = {"Owner", Color3.fromRGB(255, 0, 0)},
+	
+	-- DEVELOPER (Blue)
+	["DevUsername"] = {"Dev", Color3.fromRGB(0, 170, 255)},
+	
+	-- ADMIN (Orange)
+	["AdminUsername"] = {"Admin", Color3.fromRGB(255, 170, 0)},
+	
+	-- VIP (Gold)
+	["VIPUsername"] = {"VIP", Color3.fromRGB(255, 215, 0)},
+	
+	-- MODERATOR (Green)
+	["ModUsername"] = {"Mod", Color3.fromRGB(0, 255, 127)},
+	
+	-- STREAMER (Purple)
+	["StreamerUsername"] = {"Streamer", Color3.fromRGB(138, 43, 226)},
+	
+	-- Add more players below:
+	-- ["Username"] = {"Title", Color3.fromRGB(R, G, B)},
 }
 
--- Buat RemoteEvent untuk komunikasi ke client
+-- ========================================
+-- CONSTANTS
+-- ========================================
+local PLAYER_READY_DELAY = 1
+
+-- ========================================
+-- REMOTE EVENT SETUP
+-- ========================================
 local RoleEvent = Instance.new("RemoteEvent")
 RoleEvent.Name = "GetPlayerRole"
 RoleEvent.Parent = ReplicatedStorage
 
--- Fungsi untuk mendapatkan role pemain
+-- ========================================
+-- FUNCTIONS
+-- ========================================
+
+--- Get role data for a specific player
+-- @param playerName string - The username of the player
+-- @return table or nil - Role data {title, color} or nil if no role found
 local function getPlayerRole(playerName)
-    if PlayerRoles[playerName] then
-        return PlayerRoles[playerName]
-    end
-    return nil
+	return PlayerRoles[playerName]
 end
 
--- Kirim role ke client ketika diminta
+--- Send role data to a specific client
+-- @param client Player - The client to send data to
+-- @param targetPlayerName string - The username to get role for
+local function sendRoleToClient(client, targetPlayerName)
+	local role = getPlayerRole(targetPlayerName)
+	if role then
+		RoleEvent:FireClient(client, targetPlayerName, role)
+	end
+end
+
+--- Send all player roles to a newly joined client
+-- @param newPlayer Player - The player who just joined
+local function sendAllRolesToNewPlayer(newPlayer)
+	task.wait(PLAYER_READY_DELAY)
+	
+	for _, otherPlayer in ipairs(Players:GetPlayers()) do
+		sendRoleToClient(newPlayer, otherPlayer.Name)
+	end
+end
+
+--- Log role configuration on server start
+local function logRoleConfiguration()
+	local roleCount = 0
+	for _ in pairs(PlayerRoles) do
+		roleCount = roleCount + 1
+	end
+	
+	print(string.format("[Chat Title System] Loaded %d player role(s)", roleCount))
+	
+	for username, roleData in pairs(PlayerRoles) do
+		local title = roleData[1]
+		print(string.format("  - %s: [%s]", username, title))
+	end
+end
+
+-- ========================================
+-- EVENT CONNECTIONS
+-- ========================================
+
+--- Handle role data requests from clients
 RoleEvent.OnServerEvent:Connect(function(player, targetPlayerName)
-    local role = getPlayerRole(targetPlayerName)
-    RoleEvent:FireClient(player, targetPlayerName, role)
+	if typeof(targetPlayerName) == "string" then
+		sendRoleToClient(player, targetPlayerName)
+	else
+		warn(string.format("[Chat Title System] Invalid role request from %s", player.Name))
+	end
 end)
 
--- Kirim role semua player ke client baru
+--- Handle new players joining
 Players.PlayerAdded:Connect(function(player)
-    task.wait(1) -- Tunggu sebentar agar client siap
-    for _, otherPlayer in pairs(Players:GetPlayers()) do
-        local role = getPlayerRole(otherPlayer.Name)
-        if role then
-            RoleEvent:FireClient(player, otherPlayer.Name, role)
-        end
-    end
+	sendAllRolesToNewPlayer(player)
+	
+	-- Log if player has a special role
+	local role = getPlayerRole(player.Name)
+	if role then
+		print(string.format("[Chat Title System] %s joined with role: [%s]", player.Name, role[1]))
+	end
 end)
 
-print("Chat Title System (Server) berhasil dimuat!")
-print("Jangan lupa tambahkan LocalScript di StarterPlayer > StarterPlayerScripts!")
+-- ========================================
+-- INITIALIZATION
+-- ========================================
+print("========================================")
+print("[Chat Title System] Server successfully loaded!")
+print("[Chat Title System] Author: ItoRenz00")
+print("========================================")
+logRoleConfiguration()
+print("========================================")
+print("⚠️  REMINDER: Add LocalScript to StarterPlayer > StarterPlayerScripts")
+print("========================================")
