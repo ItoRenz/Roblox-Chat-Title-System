@@ -1,140 +1,331 @@
-# Roblox Chat Title System
+# Chat Title System
 
-A customizable chat title/role system for Roblox games using TextChatService. Display player roles like Owner, Developer, Admin, VIP, and Streamer with custom colors in the chat.
+**Author:** ItoRenz00  
+**Version:** 1.0.0
 
-![Roblox](https://img.shields.io/badge/Roblox-000000?style=for-the-badge&logo=roblox&logoColor=white)
-![Lua](https://img.shields.io/badge/Lua-2C2D72?style=for-the-badge&logo=lua&logoColor=white)
+A customizable Roblox chat system that displays colored titles and names for players based on their assigned roles. Perfect for games that need role identification, staff management, or VIP systems.
 
-## ✨ Features
+---
 
-- 🎨 **Customizable Titles** - Add any title you want (Owner, Dev, Admin, VIP, etc.)
-- 🌈 **Color Customization** - Set custom RGB colors for each role
-- 👤 **Display Name Support** - Shows player's Display Name instead of username
-- 🔧 **Easy Configuration** - Simple username-based role assignment
-- ⚡ **Modern Chat System** - Uses Roblox's TextChatService (new chat system)
-- 🚀 **Client-Server Architecture** - Optimized performance with RemoteEvents
+## 🌟 Features
 
-## 📋 Preview
+- 🎨 **Custom Colored Titles** - Display unique titles with custom RGB colors
+- 👥 **Role-Based System** - Assign different roles to different players
+- 🔄 **Automatic Sync** - Real-time role synchronization between server and clients
+- 📱 **TextChatService Support** - Uses modern Roblox chat system
+- ⚡ **Lightweight** - Optimized performance with minimal resource usage
+- 🎯 **Easy Configuration** - Simple username-based role assignment
+- 🔒 **Server-Authoritative** - Secure role management from server side
 
-```
-[Owner] John: Hello everyone!
-[Admin] Sarah: Welcome!
-[VIP] Mike: Thanks!
-Player123: Hi!
-```
+---
 
-## 🛠️ Installation
+## 📋 Requirements
 
-### Step 1: Enable TextChatService
+- Roblox Studio
+- TextChatService enabled (default in new experiences)
+- Basic understanding of Roblox scripting
 
-1. Open your game in **Roblox Studio**
-2. Find **TextChatService** in Explorer
-3. In Properties, change **ChatVersion** from `LegacyChatService` to **`TextChatService`**
+---
 
-### Step 2: Add ServerScript
+## 🚀 Installation
 
-1. Go to **ServerScriptService**
-2. Create a new **Script**
-3. Copy and paste the code from `ChatTitleServer`
-4. Configure player roles (see Configuration section)
+### Step 1: Server Script Setup
 
-### Step 3: Add LocalScript
+1. Open your Roblox Studio project
+2. Navigate to `ServerScriptService`
+3. Create a new `Script` (not LocalScript)
+4. Copy and paste the **server script code**
+5. Name it `ChatTitleServer`
 
-1. Go to **StarterPlayer > StarterPlayerScripts**
-2. Create a new **LocalScript**
-3. Copy and paste the code from `ChatTitleClient`
+### Step 2: Client Script Setup
 
-### Step 4: Test
+1. Navigate to `StarterPlayer` → `StarterPlayerScripts`
+2. Create a new `LocalScript`
+3. Copy and paste the **client script code**
+4. Name it `ChatTitleClient`
 
-- Use **Play** button or **Start Server and Players** (F7) to test
-- Your titles should appear in chat!
+### Step 3: Configuration
+
+1. Open the **server script** in `ServerScriptService`
+2. Find the `PlayerRoles` table
+3. Replace the example usernames with your actual player usernames
+4. Customize titles and colors as needed
+
+---
 
 ## ⚙️ Configuration
 
-Edit the `PlayerRoles` table in **ServerScript.lua**:
+### Adding Player Roles
+
+Edit the `PlayerRoles` table in the server script:
 
 ```lua
 local PlayerRoles = {
-    -- Format: ["Username"] = {"Title", Color3.fromRGB(R, G, B)}
-    
-    -- Examples:
-    ["BuildermanRBLX"] = {"Owner", Color3.fromRGB(255, 0, 0)},      -- Red
-    ["JohnDoe123"] = {"Dev", Color3.fromRGB(0, 170, 255)},          -- Blue
-    ["SarahGamer"] = {"Admin", Color3.fromRGB(255, 170, 0)},        -- Orange
-    ["ProPlayer"] = {"VIP", Color3.fromRGB(255, 215, 0)},           -- Gold
-    ["StreamerPro"] = {"Streamer", Color3.fromRGB(138, 43, 226)},   -- Purple
-    
-    -- Add more players here:
-    -- ["Username"] = {"Title", Color3.fromRGB(R, G, B)},
+    ["Username"] = {"Title", Color3.fromRGB(R, G, B)},
 }
 ```
 
-### Default Color Presets
+**Parameters:**
+- `Username` - Player's Roblox username (**case-sensitive!**)
+- `Title` - Text displayed in brackets (e.g., "Owner", "VIP", "Admin")
+- `Color3.fromRGB(R, G, B)` - RGB color values (0-255 for each)
 
-| Role | Color | RGB |
-|------|-------|-----|
-| Owner | 🔴 Red | `255, 0, 0` |
-| Developer | 🔵 Blue | `0, 170, 255` |
-| Admin | 🟠 Orange | `255, 170, 0` |
-| VIP | 🟡 Gold | `255, 215, 0` |
-| Streamer | 🟣 Purple | `138, 43, 226` |
+### Example Configuration
+
+```lua
+local PlayerRoles = {
+    -- Owner with red color
+    ["PlayerName1"] = {"Owner", Color3.fromRGB(255, 0, 0)},
+    
+    -- Admin with orange color
+    ["PlayerName2"] = {"Admin", Color3.fromRGB(255, 170, 0)},
+    
+    -- VIP with gold color
+    ["PlayerName3"] = {"VIP", Color3.fromRGB(255, 215, 0)},
+    
+    -- Developer with blue color
+    ["PlayerName4"] = {"Dev", Color3.fromRGB(0, 170, 255)},
+    
+    -- Moderator with green color
+    ["PlayerName5"] = {"Mod", Color3.fromRGB(0, 255, 127)},
+}
+```
+
+### Color Presets
+
+Here are some popular color combinations:
+
+| Role | Color | RGB Values |
+|------|-------|------------|
+| Owner | Red | `255, 0, 0` |
+| Admin | Orange | `255, 170, 0` |
+| Developer | Blue | `0, 170, 255` |
+| Moderator | Green | `0, 255, 127` |
+| VIP | Gold | `255, 215, 0` |
+| Premium | Purple | `138, 43, 226` |
+| Helper | Cyan | `0, 255, 255` |
+| Streamer | Pink | `255, 105, 180` |
+
+---
+
+## 💬 Chat Format
+
+Messages will appear in this format:
+
+```
+[Title] DisplayName: message content
+```
+
+**Examples:**
+```
+[Owner] John: Welcome to the game!
+[VIP] Sarah: Thanks for the updates!
+[Dev] Mike: Working on new features!
+```
+
+Both the title and display name will use the same color specified in the configuration.
+
+---
+
+## 🔧 Troubleshooting
+
+### Titles Not Showing
+
+**Problem:** Player titles don't appear in chat
+
+**Solutions:**
+- ✅ Verify username spelling matches exactly (case-sensitive)
+- ✅ Check that `GetPlayerRole` RemoteEvent exists in ReplicatedStorage
+- ✅ Ensure both server and client scripts are in correct locations
+- ✅ Restart your game/server after making changes
+- ✅ Check Output window for error messages
+
+### Wrong Colors Displaying
+
+**Problem:** Colors appear different than expected
+
+**Solutions:**
+- ✅ Confirm RGB values are between 0-255
+- ✅ Use `Color3.fromRGB()` not `Color3.new()`
+- ✅ Check for typos in the color values
+
+### New Players Not Getting Roles
+
+**Problem:** Players joining after game start don't see roles
+
+**Solutions:**
+- ✅ Verify `PlayerAdded` event is connected in server script
+- ✅ Check that client script is in `StarterPlayerScripts`
+- ✅ Ensure proper delays are in place for client initialization
+
+### RemoteEvent Not Found Error
+
+**Problem:** "GetPlayerRole" not found in ReplicatedStorage
+
+**Solutions:**
+- ✅ Make sure server script runs before client script
+- ✅ Check that server script is in `ServerScriptService`
+- ✅ Verify RemoteEvent creation code is present in server script
+
+---
+
+## 🎓 Advanced Usage
+
+### Dynamic Role Changes
+
+To change a player's role during runtime:
+
+```lua
+-- Server Script
+local function updatePlayerRole(playerName, newTitle, newColor)
+    PlayerRoles[playerName] = {newTitle, newColor}
+    
+    -- Notify all clients
+    for _, player in ipairs(Players:GetPlayers()) do
+        RoleEvent:FireClient(player, playerName, PlayerRoles[playerName])
+    end
+end
+
+-- Example usage
+updatePlayerRole("PlayerName", "SuperVIP", Color3.fromRGB(255, 0, 255))
+```
+
+### Group-Based Roles
+
+Assign roles based on Roblox group ranks:
+
+```lua
+-- Server Script
+Players.PlayerAdded:Connect(function(player)
+    local groupId = 1234567 -- Your group ID
+    local rank = player:GetRankInGroup(groupId)
+    
+    if rank >= 255 then
+        PlayerRoles[player.Name] = {"Owner", Color3.fromRGB(255, 0, 0)}
+    elseif rank >= 200 then
+        PlayerRoles[player.Name] = {"Admin", Color3.fromRGB(255, 170, 0)}
+    elseif rank >= 100 then
+        PlayerRoles[player.Name] = {"Mod", Color3.fromRGB(0, 255, 127)}
+    end
+    
+    -- Send updated role to all clients
+    for _, otherPlayer in ipairs(Players:GetPlayers()) do
+        local role = PlayerRoles[player.Name]
+        if role then
+            RoleEvent:FireClient(otherPlayer, player.Name, role)
+        end
+    end
+end)
+```
+
+### GamePass-Based Roles
+
+Grant roles to players with specific GamePasses:
+
+```lua
+-- Server Script
+local MarketplaceService = game:GetService("MarketplaceService")
+
+Players.PlayerAdded:Connect(function(player)
+    local vipPassId = 123456 -- Your GamePass ID
+    
+    local hasPass = false
+    local success, message = pcall(function()
+        hasPass = MarketplaceService:UserOwnsGamePassAsync(player.UserId, vipPassId)
+    end)
+    
+    if hasPass then
+        PlayerRoles[player.Name] = {"VIP", Color3.fromRGB(255, 215, 0)}
+        
+        -- Notify all clients
+        for _, otherPlayer in ipairs(Players:GetPlayers()) do
+            RoleEvent:FireClient(otherPlayer, player.Name, PlayerRoles[player.Name])
+        end
+    end
+end)
+```
+
+---
 
 ## 📁 File Structure
 
 ```
-YourGame/
-├── ServerScriptService/
-│   └── ServerScript.lua          (Role configuration & server logic)
-└── StarterPlayer/
-    └── StarterPlayerScripts/
-        └── LocalScript.lua        (Client-side chat display)
+YourGame
+├── ServerScriptService
+│   └── ChatTitleServer (Script)
+├── StarterPlayer
+│   └── StarterPlayerScripts
+│       └── ChatTitleClient (LocalScript)
+└── ReplicatedStorage
+    └── GetPlayerRole (RemoteEvent) - Created automatically
 ```
-
-## 🔍 How It Works
-
-1. **Server** stores all player roles and their configurations
-2. **Client** requests role data from server via RemoteEvent
-3. **TextChatService.OnIncomingMessage** intercepts chat messages
-4. Script adds custom prefix with title and color to each message
-
-## ⚠️ Important Notes
-
-- ⚠️ **Usernames are case-sensitive!** Make sure to type them exactly as they appear on Roblox
-- ⚠️ **TextChatService only** - This script requires the new chat system
-- ✅ Works in Play mode, Test Server, and Published games
-- ✅ Display Names are automatically shown
-
-## 🐛 Troubleshooting
-
-### Titles not showing up?
-- ✅ Check if **ChatVersion** is set to `TextChatService`
-- ✅ Verify username spelling (case-sensitive!)
-- ✅ Make sure both scripts are in correct locations
-- ✅ Check Output console for error messages
-
-### Script errors in Play mode?
-- ✅ Make sure you're using **both** ServerScript and LocalScript
-- ✅ Try using "Start Server and Players" (F7) instead of Play button
-
-## 📝 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](../../issues).
-
-## 💖 Support
-
-If you found this helpful, please consider:
-- ⭐ Starring this repository
-- 🐛 Reporting bugs
-- 💡 Suggesting new features
-
-## 📧 Contact
-
-Have questions? Feel free to open an issue or reach out!
 
 ---
 
-Made with ❤️ for the Roblox development community
+## 🔒 Security Notes
+
+- ✅ All role assignments are server-authoritative
+- ✅ Clients cannot modify their own roles
+- ✅ Role data is validated before sending to clients
+- ✅ Safe from client-side exploits
+
+---
+
+## 📝 Changelog
+
+### Version 1.0.0 (Current)
+- Initial release
+- Basic role system with colored titles
+- Server-client synchronization
+- Automatic role distribution to new players
+- Comprehensive documentation
+
+---
+
+## 🤝 Contributing
+
+Feel free to fork this project and submit pull requests for improvements!
+
+**Ideas for contributions:**
+- Additional color presets
+- Role priority system
+- Multiple title support
+- Animation effects
+- Sound effects on role assignment
+
+---
+
+## 📄 License
+
+This project is free to use and modify for your Roblox games.  
+**Credit to ItoRenz00 is appreciated but not required.**
+
+---
+
+## 🆘 Support
+
+If you encounter issues or have questions:
+
+1. Check the **Troubleshooting** section above
+2. Review the **Output** window in Studio for errors
+3. Verify all installation steps were followed correctly
+4. Open an issue on the GitHub repository
+
+---
+
+## 👨‍💻 Author
+
+**ItoRenz00**
+
+---
+
+## ⭐ Show Your Support
+
+If this system helped your game, consider:
+- ⭐ Starring the repository
+- 🔄 Sharing with other developers
+- 💬 Leaving feedback
+
+---
+
+**Made with ❤️ by ItoRenz00**
