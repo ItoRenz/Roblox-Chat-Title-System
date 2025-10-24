@@ -1,13 +1,14 @@
 --[[
 	========================================
-	CHAT TITLE SYSTEM - CLIENT
+	CHAT TITLE SYSTEM - CLIENT (FIXED)
 	========================================
 	Author: ItoRenz00
-	Version: 1.0.0
+	Version: 1.1.0
 	
 	Description:
 		Displays custom colored titles for players in chat
 		based on their assigned roles from the server.
+		NOW WITH PROPER MULTIPLAYER SUPPORT!
 	
 	Installation:
 		Place this LocalScript in:
@@ -47,7 +48,7 @@ local NEW_PLAYER_DELAY = 0.5
 -- @param targetPlayer Player - The player to request role for
 local function requestPlayerRole(targetPlayer)
 	if targetPlayer and targetPlayer.Name then
-		RoleEvent:FireServer(targetPlayer.Name)
+		RoleEvent:FireServer("RequestRole", targetPlayer.Name)
 	end
 end
 
@@ -96,10 +97,13 @@ end
 -- ========================================
 
 --- Handle role data received from server
-RoleEvent.OnClientEvent:Connect(function(playerName, role)
-	if role and playerName then
+RoleEvent.OnClientEvent:Connect(function(action, playerName, role)
+	if action == "UpdateRole" and role and playerName then
 		PlayerRoles[playerName] = role
-		print(string.format("[Chat Title] Role received for %s: [%s]", playerName, role[1]))
+		print(string.format("[Chat Title] Role updated for %s: [%s]", playerName, role[1]))
+	elseif action == "RemoveRole" and playerName then
+		PlayerRoles[playerName] = nil
+		print(string.format("[Chat Title] Role removed for %s", playerName))
 	end
 end)
 
@@ -107,6 +111,11 @@ end)
 Players.PlayerAdded:Connect(function(newPlayer)
 	task.wait(NEW_PLAYER_DELAY)
 	requestPlayerRole(newPlayer)
+end)
+
+--- Handle players leaving the game
+Players.PlayerRemoving:Connect(function(leavingPlayer)
+	PlayerRoles[leavingPlayer.Name] = nil
 end)
 
 -- ========================================
@@ -125,3 +134,4 @@ requestAllPlayerRoles()
 -- ========================================
 print("[Chat Title System] Client successfully loaded!")
 print("[Chat Title System] Author: ItoRenz00")
+print("[Chat Title System] Ready to display titles for all players!")
