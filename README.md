@@ -147,8 +147,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **ItoRenz00**
 
-- GitHub: [@ItoRenz00](https://github.com/ItoRenz)
-- Roblox: [YourRobloxProfile](https://www.roblox.com/users/7976793837/profile)
+- GitHub: [@ItoRenz](https://github.com/ItoRenz)
+- Roblox: [ItoRenz00](https://www.roblox.com/users/7976793837/profile)
 
 ## 🌟 Support
 
