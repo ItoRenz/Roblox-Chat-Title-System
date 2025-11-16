@@ -1,6 +1,6 @@
 -- ========================================
 -- CHAT TITLE SYSTEM - CLIENT
--- Author: ItoRenz00, Modified by Claude
+-- Author: ItoRenz00
 -- Version: 1.1.0
 -- Description:
 -- Displays custom colored titles based on player roles from server.
