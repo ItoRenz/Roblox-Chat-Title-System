@@ -1,68 +1,36 @@
---[[
-	========================================
-	CHAT TITLE SYSTEM - CLIENT (FIXED)
-	========================================
-	Author: ItoRenz00
-	Modified by: Claude
-	Version: 1.1.0
-	
-	Description:
-		Displays custom colored titles for players in chat
-		based on their assigned roles from the server.
-		NOW WITH PROPER MULTIPLAYER SUPPORT!
-	
-	Installation:
-		Place this LocalScript in:
-		StarterPlayer > StarterPlayerScripts
-	
-	Requirements:
-		- RemoteEvent "GetPlayerRole" in ReplicatedStorage
-		- Server-side role management system
-	========================================
---]]
+-- ========================================
+-- CHAT TITLE SYSTEM - CLIENT
+-- Author: ItoRenz00, Modified by Claude
+-- Version: 1.1.0
+-- Description:
+-- Displays custom colored titles based on player roles from server.
+-- Place this LocalScript in StarterPlayer > StarterPlayerScripts
+-- ========================================
 
--- ========================================
--- SERVICES
--- ========================================
 local TextChatService = game:GetService("TextChatService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- ========================================
--- VARIABLES
--- ========================================
 local player = Players.LocalPlayer
 local RoleEvent = ReplicatedStorage:WaitForChild("GetPlayerRole")
 local PlayerRoles = {}
 
--- ========================================
--- CONSTANTS
--- ========================================
 local ROLE_REQUEST_DELAY = 1
 local NEW_PLAYER_DELAY = 0.5
+local DEFAULT_COLOR = Color3.fromRGB(255, 255, 255)
 
--- ========================================
--- FUNCTIONS
--- ========================================
-
---- Request role for a specific player from server
--- @param targetPlayer Player - The player to request role for
 local function requestPlayerRole(targetPlayer)
 	if targetPlayer and targetPlayer.Name then
 		RoleEvent:FireServer("RequestRole", targetPlayer.Name)
 	end
 end
 
---- Request roles for all current players
 local function requestAllPlayerRoles()
 	for _, otherPlayer in ipairs(Players:GetPlayers()) do
 		requestPlayerRole(otherPlayer)
 	end
 end
 
---- Format chat message with colored title and display name
--- @param message TextChatMessage - The incoming chat message
--- @return TextChatMessageProperties or nil
 local function formatChatMessage(message)
 	local textSource = message.TextSource
 	if not textSource then return nil end
@@ -71,68 +39,61 @@ local function formatChatMessage(message)
 	if not sourcePlayer then return nil end
 	
 	local role = PlayerRoles[sourcePlayer.Name]
-	if not role then return nil end
-	
-	local title = role[1]
-	local color = role[2]
-	
-	-- Create chat message properties
 	local properties = Instance.new("TextChatMessageProperties")
 	
-	-- Format: [Title] DisplayName: message
-	-- Both title and display name use the same color
-	properties.PrefixText = string.format(
-		'<font color="rgb(%d,%d,%d)">[%s] %s:</font> ',
-		math.floor(color.R * 255),
-		math.floor(color.G * 255),
-		math.floor(color.B * 255),
-		title,
-		sourcePlayer.DisplayName
-	)
+	if role then
+		local title = role[1]
+		local color = role[2]
+		properties.PrefixText = string.format(
+			'<font color="rgb(%d,%d,%d)">[%s] %s:</font> ',
+			math.floor(color.R * 255),
+			math.floor(color.G * 255),
+			math.floor(color.B * 255),
+			title,
+			sourcePlayer.DisplayName
+		)
+	else
+		properties.PrefixText = string.format(
+			'<font color="rgb(255,255,255)">%s:</font> ',
+			sourcePlayer.DisplayName
+		)
+	end
 	
 	return properties
 end
 
--- ========================================
--- EVENT CONNECTIONS
--- ========================================
+local loggedRoles = {}
 
---- Handle role data received from server
 RoleEvent.OnClientEvent:Connect(function(action, playerName, role)
 	if action == "UpdateRole" and role and playerName then
 		PlayerRoles[playerName] = role
-		print(string.format("[Chat Title] Role updated for %s: [%s]", playerName, role[1]))
+		if loggedRoles[playerName] ~= role[1] then
+			loggedRoles[playerName] = role[1]
+			print(string.format("[Chat Title] Role updated for %s: [%s]", playerName, role[1]))
+		end
 	elseif action == "RemoveRole" and playerName then
 		PlayerRoles[playerName] = nil
-		print(string.format("[Chat Title] Role removed for %s", playerName))
+		if loggedRoles[playerName] then
+			loggedRoles[playerName] = nil
+			print(string.format("[Chat Title] Role removed for %s", playerName))
+		end
 	end
 end)
 
---- Handle new players joining the game
 Players.PlayerAdded:Connect(function(newPlayer)
 	task.wait(NEW_PLAYER_DELAY)
 	requestPlayerRole(newPlayer)
 end)
 
---- Handle players leaving the game
 Players.PlayerRemoving:Connect(function(leavingPlayer)
 	PlayerRoles[leavingPlayer.Name] = nil
+	loggedRoles[leavingPlayer.Name] = nil
 end)
 
--- ========================================
--- INITIALIZATION
--- ========================================
-
--- Setup chat message formatter
 TextChatService.OnIncomingMessage = formatChatMessage
 
--- Request roles for all existing players
 task.wait(ROLE_REQUEST_DELAY)
 requestAllPlayerRoles()
 
--- ========================================
--- COMPLETION
--- ========================================
-print("[Chat Title System] Client successfully loaded!")
-print("[Chat Title System] Author: ItoRenz00")
-print("[Chat Title System] Ready to display titles for all players!")
+print("[Chat Title System] Client successfully loaded! Ready to show titles.")
+print("Author: ItoRenz00")
