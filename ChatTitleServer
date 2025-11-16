@@ -1,134 +1,64 @@
---[[
-	========================================
-	CHAT TITLE SYSTEM - SERVER (FIXED)
-	========================================
-	Author: ItoRenz00
-	Version: 1.1.0
-	
-	Description:
-		Manages player roles and broadcasts role data to ALL clients
-		for displaying custom colored titles in chat.
-		FIXED: Now all players can see each other's titles!
-	
-	Installation:
-		Place this Script in ServerScriptService
-	
-	Configuration:
-		Edit the PlayerRoles table below to add/modify roles
-		Format: ["Username"] = {"Title", Color3.fromRGB(R, G, B)}
-		Note: Usernames are case-sensitive!
-	========================================
---]]
+-- ========================================
+-- CHAT TITLE SYSTEM - SERVER
+-- Author: ItoRenz00
+-- Version: 1.1.0
+-- Description:
+-- Manages player roles and broadcasts role data for chat titles.
+-- Place this Script in ServerScriptService
+-- ========================================
 
--- ========================================
--- SERVICES
--- ========================================
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- ========================================
--- CONFIGURATION: PLAYER ROLES
--- ========================================
---[[
-	Role Structure:
-	["Username"] = {"Title", Color3.fromRGB(R, G, B)}
-	
-	- Username: Player's Roblox username (case-sensitive!)
-	- Title: Text displayed in brackets before name
-	- Color: RGB color for title and name (0-255 for each value)
-	
-	Example Colors:
-	- Red:    Color3.fromRGB(255, 0, 0)
-	- Blue:   Color3.fromRGB(0, 170, 255)
-	- Green:  Color3.fromRGB(0, 255, 0)
-	- Gold:   Color3.fromRGB(255, 215, 0)
-	- Purple: Color3.fromRGB(138, 43, 226)
---]]
-
 local PlayerRoles = {
-	-- OWNER (Red)
 	["YourUsername"] = {"Owner", Color3.fromRGB(255, 0, 0)},
-	
-	-- DEVELOPER (Blue)
-	["ItoRenz00"] = {"Dev", Color3.fromRGB(0, 170, 255)},
-	
-	-- ADMIN (Orange)
+	["HeadAdminUsername"] = {"Head Admin", Color3.fromRGB(255, 85, 0)}, -- Head Admin role (Orange Red)
 	["AdminUsername"] = {"Admin", Color3.fromRGB(255, 170, 0)},
-	
-	-- VIP (Gold)
+	["ItoRenz00"] = {"Dev", Color3.fromRGB(0, 170, 255)},
 	["VIPUsername"] = {"VIP", Color3.fromRGB(255, 215, 0)},
-	
-	-- MODERATOR (Green)
-	["ModUsername"] = {"Mod", Color3.fromRGB(0, 255, 127)},
-	
-	-- STREAMER (Purple)
 	["StreamerUsername"] = {"Streamer", Color3.fromRGB(138, 43, 226)},
-	
-	-- Add more players below:
-	-- ["Username"] = {"Title", Color3.fromRGB(R, G, B)},
+	["Top1Username"] = {"Top 1", Color3.fromRGB(255, 223, 0)},
+	["Top2Username"] = {"Top 2", Color3.fromRGB(192, 192, 192)},
+	["Top3Username"] = {"Top 3", Color3.fromRGB(205, 127, 50)},
 }
 
--- ========================================
--- CONSTANTS
--- ========================================
 local PLAYER_READY_DELAY = 0.5
 
--- ========================================
--- REMOTE EVENT SETUP
--- ========================================
 local RoleEvent = Instance.new("RemoteEvent")
 RoleEvent.Name = "GetPlayerRole"
 RoleEvent.Parent = ReplicatedStorage
 
--- ========================================
--- FUNCTIONS
--- ========================================
-
---- Get role data for a specific player
--- @param playerName string - The username of the player
--- @return table or nil - Role data {title, color} or nil if no role found
 local function getPlayerRole(playerName)
 	return PlayerRoles[playerName]
 end
 
---- Broadcast role to ALL clients (so everyone can see it)
--- @param targetPlayerName string - The username to broadcast role for
 local function broadcastRoleToAllClients(targetPlayerName)
 	local role = getPlayerRole(targetPlayerName)
 	if role then
-		-- Send to ALL players currently in the game
 		for _, client in ipairs(Players:GetPlayers()) do
 			RoleEvent:FireClient(client, "UpdateRole", targetPlayerName, role)
 		end
-		print(string.format("[Chat Title] Broadcasted role [%s] for %s to all clients", role[1], targetPlayerName))
 	end
 end
 
---- Send all existing roles to a newly joined player
--- @param newPlayer Player - The player who just joined
 local function sendAllRolesToNewPlayer(newPlayer)
 	task.wait(PLAYER_READY_DELAY)
-	
-	-- Send roles of all current players to the new player
 	for _, otherPlayer in ipairs(Players:GetPlayers()) do
 		local role = getPlayerRole(otherPlayer.Name)
 		if role then
 			RoleEvent:FireClient(newPlayer, "UpdateRole", otherPlayer.Name, role)
 		end
 	end
-	
-	print(string.format("[Chat Title] Sent all roles to new player: %s", newPlayer.Name))
 end
 
---- Notify all clients to remove a player's role (when they leave)
--- @param playerName string - The username of the player who left
 local function broadcastRoleRemoval(playerName)
 	for _, client in ipairs(Players:GetPlayers()) do
 		RoleEvent:FireClient(client, "RemoveRole", playerName)
 	end
 end
 
---- Log role configuration on server start
+local loggedPlayers = {}
+
 local function logRoleConfiguration()
 	local roleCount = 0
 	for _ in pairs(PlayerRoles) do
@@ -136,21 +66,13 @@ local function logRoleConfiguration()
 	end
 	
 	print(string.format("[Chat Title System] Loaded %d player role(s)", roleCount))
-	
 	for username, roleData in pairs(PlayerRoles) do
-		local title = roleData[1]
-		print(string.format("  - %s: [%s]", username, title))
+		print(string.format("  - %s: [%s]", username, roleData[1]))
 	end
 end
 
--- ========================================
--- EVENT CONNECTIONS
--- ========================================
-
---- Handle role data requests from clients
 RoleEvent.OnServerEvent:Connect(function(player, action, targetPlayerName)
 	if action == "RequestRole" and typeof(targetPlayerName) == "string" then
-		-- Send the requested role only to the requesting client
 		local role = getPlayerRole(targetPlayerName)
 		if role then
 			RoleEvent:FireClient(player, "UpdateRole", targetPlayerName, role)
@@ -161,45 +83,37 @@ RoleEvent.OnServerEvent:Connect(function(player, action, targetPlayerName)
 	end
 end)
 
---- Handle new players joining
 Players.PlayerAdded:Connect(function(player)
-	-- Send all existing roles to the new player
 	sendAllRolesToNewPlayer(player)
 	
-	-- If the new player has a role, broadcast it to all clients
 	local role = getPlayerRole(player.Name)
-	if role then
-		task.wait(PLAYER_READY_DELAY + 0.1) -- Wait slightly longer to ensure player is fully loaded
+	if role and not loggedPlayers[player.Name] then
+		task.wait(PLAYER_READY_DELAY + 0.1)
 		broadcastRoleToAllClients(player.Name)
+		loggedPlayers[player.Name] = true
 		print(string.format("[Chat Title System] %s joined with role: [%s]", player.Name, role[1]))
 	end
 end)
 
---- Handle players leaving
 Players.PlayerRemoving:Connect(function(player)
-	-- Notify all clients to remove this player's role
 	broadcastRoleRemoval(player.Name)
+	loggedPlayers[player.Name] = nil
 	print(string.format("[Chat Title System] %s left the game", player.Name))
 end)
 
--- ========================================
--- INITIALIZATION
--- ========================================
 print("========================================")
 print("[Chat Title System] Server successfully loaded!")
-print("[Chat Title System] Author: ItoRenz00")
-print("[Chat Title System] Modified for multiplayer support")
-print("========================================")
-logRoleConfiguration()
-print("========================================")
-print("✅ BROADCAST MODE: All players will see each other's titles!")
-print("⚠️  REMINDER: Add LocalScript to StarterPlayer > StarterPlayerScripts")
+print("[Chat Title System] Ready for multiplayer support")
 print("========================================")
 
--- Broadcast existing player roles (for when server script reloads)
+logRoleConfiguration()
+
 task.wait(1)
 for _, existingPlayer in ipairs(Players:GetPlayers()) do
 	if getPlayerRole(existingPlayer.Name) then
 		broadcastRoleToAllClients(existingPlayer.Name)
+		loggedPlayers[existingPlayer.Name] = true
 	end
 end
+
+print("Author: ItoRenz00")
