@@ -90,7 +90,9 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
 	loggedRoles[leavingPlayer.Name] = nil
 end)
 
-TextChatService.OnIncomingMessage = formatChatMessage
+TextChatService.OnIncomingMessage = function(message)
+	return formatChatMessage(message)
+end
 
 task.wait(ROLE_REQUEST_DELAY)
 requestAllPlayerRoles()
